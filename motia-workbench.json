@@ -1,0 +1,40 @@
+[
+  {
+    "id": "basic-tutorial",
+    "config": {
+      "steps\\state-audit-cron.step.ts": {
+        "x": 994,
+        "y": -63
+      },
+      "steps\\notification.step.ts": {
+        "x": 821,
+        "y": 229
+      }
+    }
+  },
+  {
+    "id": "crypto-crawler",
+    "config": {
+      "steps\\crawl-scheduler.step.ts": {
+        "x": -151,
+        "y": 149
+      },
+      "steps\\crawl-project-detail.step.ts": {
+        "x": 895,
+        "y": 104
+      },
+      "steps\\crawl-manual-trigger.step.ts": {
+        "x": 350,
+        "y": 203
+      },
+      "steps\\crawl-ico-list.step.ts": {
+        "x": 405,
+        "y": -162
+      },
+      "steps\\crawl-status.step.ts": {
+        "x": -128,
+        "y": -176
+      }
+    }
+  }
+]

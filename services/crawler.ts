@@ -2,8 +2,9 @@ import puppeteer, { Browser, Page } from 'puppeteer'
 import { CryptoRankProject, ICOListItem } from './schemas'
 import { AntiBotMeasures } from './anti-bot'
 import { ICOListExtractor } from './extractors/ico-list-extractor'
-import { ProjectDetailExtractor } from './extractors/project-detail-extractor'
-import { normalizeProjectData, mapToProjectCategory, mapToChain } from './utils'
+import { BasicInfoExtractor } from './extractors/basic-info-extractor'
+import { TeamExtractor } from './extractors/team-extractor'
+
 
 export class CryptoRankCrawler {
   private browser: Browser | null = null
@@ -101,10 +102,37 @@ export class CryptoRankCrawler {
       await AntiBotMeasures.simulateHumanBehavior(page)
 
       // Use the extracted project detail extractor
-      return await ProjectDetailExtractor.extractProjectDetail(page, url)
+      return await  BasicInfoExtractor.extractBasicInfo(page, url)
     } catch (error) {
       console.error(`Error crawling project ${url}:`, error)
       return null
+    } finally {
+      // Close the page to free up resources
+      await page.close()
+    }
+  }
+
+  async crawlTeamInfo(url: string): Promise<any[]> {
+    if (!this.browser) throw new Error('Crawler not initialized')
+
+    // Create a new page for team crawling
+    const page = await this.browser.newPage()
+    
+    try {
+      // Setup anti-bot measures for new page
+      await AntiBotMeasures.setupAntiBotMeasures(page)
+      
+      // Add random delay before each request
+      await AntiBotMeasures.randomDelay(2000, 5000)
+      
+      // Simulate human behavior
+      await AntiBotMeasures.simulateHumanBehavior(page)
+
+      // Use the team extractor
+      return await TeamExtractor.extractTeamInfo(page, url)
+    } catch (error) {
+      console.error(`Error crawling team info for ${url}:`, error)
+      return []
     } finally {
       // Close the page to free up resources
       await page.close()
@@ -125,4 +153,3 @@ export class CryptoRankCrawler {
 
 // Re-export types and utilities for convenience
 export { CryptoRankProject, ICOListItem } from './schemas'
-export { normalizeProjectData, mapToProjectCategory, mapToChain } from './utils'

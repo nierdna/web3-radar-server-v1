@@ -1,0 +1,320 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model User {
+  id              String        @id @default(cuid())
+  name            String?
+  email           String        @unique
+  emailVerified   DateTime?
+  image           String?
+  role            UserRole      @default(Viewer)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  accounts        Account[]
+  auditLogs       AuditLog[]
+  sessions        Session[]
+  createdProjects Web3Project[] @relation("CreatedBy")
+  updatedProjects Web3Project[] @relation("UpdatedBy")
+
+  @@map("users")
+}
+
+model Web3Project {
+  id               String             @id @default(cuid())
+  name             String
+  symbol           String?
+  description      String
+  website          String?
+  category         ProjectCategory
+  chain            Chain
+  launchStatus     LaunchStatus
+  isPublished      Boolean            @default(false)
+  isDeleted        Boolean            @default(false)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  createdById      String
+  updatedById      String
+  audits           Audit[]
+  communityMetrics CommunityMetrics?
+  fundraising      Fundraising?
+  preMarketPricing PreMarketPricing[]
+  roadmap          RoadmapItem[]
+  socials          Socials?
+  team             TeamMember[]
+  tgeInfo          TgeInfo?
+  tokenomic        Tokenomic?
+  createdBy        User               @relation("CreatedBy", fields: [createdById], references: [id])
+  updatedBy        User               @relation("UpdatedBy", fields: [updatedById], references: [id])
+
+  @@map("web3_projects")
+}
+
+model Socials {
+  id        String      @id @default(cuid())
+  twitter   String?
+  discord   String?
+  telegram  String?
+  medium    String?
+  github    String?
+  projectId String      @unique
+  project   Web3Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("socials")
+}
+
+model Fundraising {
+  id               String         @id @default(cuid())
+  totalRaised      Float?
+  notableInvestors String[]
+  projectId        String         @unique
+  fundingRounds    FundingRound[]
+  project          Web3Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("fundraising")
+}
+
+model FundingRound {
+  id            String      @id @default(cuid())
+  roundName     String
+  date          DateTime
+  amount        Float
+  investors     String[]
+  tokenPrice    Float?
+  fundraisingId String
+  fundraising   Fundraising @relation(fields: [fundraisingId], references: [id], onDelete: Cascade)
+
+  @@map("funding_rounds")
+}
+
+model Tokenomic {
+  id                String            @id @default(cuid())
+  tokenName         String
+  tokenSymbol       String
+  tokenType         TokenType
+  totalSupply       Float
+  circulatingSupply Float?
+  tokenContract     String?
+  projectId         String            @unique
+  allocations       TokenAllocation[]
+  project           Web3Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("tokenomics")
+}
+
+model TokenAllocation {
+  id              String    @id @default(cuid())
+  name            String
+  percent         Float
+  vestingSchedule String?
+  cliff           String?
+  tokenomicId     String
+  tokenomic       Tokenomic @relation(fields: [tokenomicId], references: [id], onDelete: Cascade)
+
+  @@map("token_allocations")
+}
+
+model RoadmapItem {
+  id         String        @id @default(cuid())
+  milestone  String
+  targetDate DateTime?
+  status     RoadmapStatus
+  projectId  String
+  project    Web3Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("roadmap_items")
+}
+
+model TeamMember {
+  id        String      @id @default(cuid())
+  name      String
+  role      String
+  linkedin  String?
+  anonymous Boolean     @default(false)
+  projectId String
+  project   Web3Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("team_members")
+}
+
+model Audit {
+  id         String      @id @default(cuid())
+  auditor    String
+  reportLink String?
+  auditDate  DateTime?
+  projectId  String
+  project    Web3Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("audits")
+}
+
+model AuditLog {
+  id        String      @id @default(cuid())
+  action    AuditAction
+  tableName String
+  recordId  String
+  oldValues Json?
+  newValues Json?
+  userId    String
+  createdAt DateTime    @default(now())
+  user      User        @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
+
+model TgeInfo {
+  id               String      @id @default(cuid())
+  tgeDate          DateTime?
+  tgeExchange      String?
+  initialMarketcap Float?
+  projectId        String      @unique
+  project          Web3Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("tge_info")
+}
+
+model CommunityMetrics {
+  id               String      @id @default(cuid())
+  twitterFollowers Int?
+  discordMembers   Int?
+  telegramMembers  Int?
+  githubStars      Int?
+  projectId        String      @unique
+  project          Web3Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("community_metrics")
+}
+
+model PreMarketPricing {
+  id        String      @id @default(cuid())
+  platform  String
+  lastPrice Float?
+  totalVol  Float?
+  vol24h    Float?
+  change24h Float?
+  projectId String
+  project   Web3Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("pre_market_pricing")
+}
+
+enum ProjectCategory {
+  Infra
+  DeFi
+  NFT
+  GameFi
+  DAO
+  Tool
+  Layer1
+  Layer2
+  Others
+}
+
+enum Chain {
+  Ethereum
+  Solana
+  BNB
+  Polygon
+  Multichain
+  Arbitrum
+  Optimism
+  Avalanche
+  Fantom
+  Cardano
+  Polkadot
+  Cosmos
+  Near
+  Algorand
+  Tezos
+  Aptos
+  Sui
+  Base
+  Linea
+  Scroll
+  Mantle
+  zkSync
+  Starknet
+  Immutable
+  Ronin
+  Oasys
+  Other
+}
+
+enum LaunchStatus {
+  NotLaunched
+  Testnet
+  Mainnet
+  Dead
+}
+
+enum TokenType {
+  Utility
+  Governance
+  Security
+  Reward
+  Staking
+  Liquidity
+  Other
+}
+
+enum RoadmapStatus {
+  Planned
+  InProgress
+  Completed
+}
+
+enum UserRole {
+  Admin
+  Editor
+  Viewer
+}
+
+enum AuditAction {
+  Create
+  Update
+  Delete
+}

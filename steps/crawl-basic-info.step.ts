@@ -1,11 +1,11 @@
 import { EventConfig, Handlers } from 'motia'
 import { z } from 'zod'
-import { CryptoRankCrawler, normalizeProjectData, mapToProjectCategory, mapToChain } from '../services/crawler'
-
+import { CryptoRankCrawler } from '../services/crawler'
+import { normalizeProjectData } from '../services/utils'
 export const config: EventConfig = {
   type: 'event',
-  name: 'CrawlProjectDetail',
-  description: 'Crawl individual project details from CryptoRank',
+  name: 'CrawlBasicInfo',
+  description: 'Crawl basic project information from CryptoRank',
   subscribes: ['ico.list.crawled'],
   emits: ['project.detail.crawled', 'project.detail.failed'],
   input: z.object({
@@ -26,12 +26,12 @@ export const config: EventConfig = {
   flows: ['crypto-crawler'],
 }
 
-export const handler: Handlers['CrawlProjectDetail'] = async (input, { emit, logger, state, traceId }) => {
+export const handler: Handlers['CrawlBasicInfo'] = async (input, { emit, logger, state, traceId }) => {
   const { urls, icoData } = input
   
   // Create a map of URL to basic data for quick lookup
-  const urlToBasicData = new Map()
-  icoData.forEach(item => {
+  const urlToBasicData = new Map<string, any>()
+  icoData.forEach((item: any) => {
     urlToBasicData.set(item.detailUrl, item)
   })
   const crawler = new CryptoRankCrawler()
@@ -55,7 +55,7 @@ export const handler: Handlers['CrawlProjectDetail'] = async (input, { emit, log
       const batch = urls.slice(i, i + concurrency)
       
       // Process batch in parallel
-      const batchPromises = batch.map(async (url, index) => {
+      const batchPromises = batch.map(async (url: string, index: number) => {
         try {
           // Add delay between requests to avoid rate limiting
           if (index > 0) {
@@ -70,14 +70,26 @@ export const handler: Handlers['CrawlProjectDetail'] = async (input, { emit, log
             
             // Normalize and enrich data
             const normalizedData = normalizeProjectData(projectData)
+            
+            // Crawl team info as well
+            let teamMembers = []
+            try {
+              teamMembers = await crawler.crawlTeamInfo(url)
+              logger.info('Team info crawled', { url, teamCount: teamMembers.length, traceId })
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : String(error)
+              logger.warn('Failed to crawl team info', { url, error: errorMessage, traceId })
+            }
+            
             const enrichedData = {
               ...normalizedData,
               // Use data from list page if available, otherwise use detail page
               name: basicData.projectName || normalizedData.name,
               symbol: basicData.tokenSymbol || normalizedData.symbol,
-              category: mapToProjectCategory(basicData.category || normalizedData.category || ''),
-              chain: mapToChain(basicData.chain || normalizedData.chain || ''),
+              category: basicData.category || normalizedData.category || '',
+              chain: basicData.chain || normalizedData.chain ,
               status: basicData.status || normalizedData.status || '',
+              team: teamMembers, // Add team info
               crawledAt: new Date().toISOString(),
               sourceUrl: url,
             }

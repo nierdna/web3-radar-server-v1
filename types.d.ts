@@ -12,10 +12,12 @@ declare module 'motia' {
   }
 
   interface Handlers {
+    'CrawlTeamTrigger': ApiRouteHandler<{ projectUrl: string; projectId?: string }, ApiResponse<200, { success: boolean; message: string; projectUrl: string }> | ApiResponse<400, { error: string }>, { topic: 'project.team.crawl'; data: { projectUrl: string; projectId?: string } }>
+    'CrawlTeamInfo': EventHandler<{ projectUrl: string; projectId?: string }, never>
     'CrawlStatus': ApiRouteHandler<Record<string, unknown>, ApiResponse<200, { success: boolean; status: { lastCrawl?: string; totalProjects: number; successRate: number; errorRate: number; recentCrawls: { timestamp: string; totalUrls: number; successCount: number; errorCount: number; successRate: number }[] } }> | ApiResponse<500, { success: boolean; error: string }>, never>
     'CrawlScheduler': CronHandler<{ topic: 'crawl.scheduled'; data: { scheduledAt: string; trigger: string; maxProjects: number; delay: number } }>
-    'CrawlProjectDetail': EventHandler<{ urls: string[]; icoData: { detailUrl: string; projectName: string; tokenSymbol: string; chain: string; category: string; status: string }[]; totalCount: number; originalCount: number; crawledAt: string; traceId: string }, never>
     'CrawlManualTrigger': EventHandler<{ scheduledAt: string; trigger: string; maxProjects: number; delay: number }, { topic: 'ico.list.crawled'; data: { urls: string[]; icoData: { detailUrl: string; projectName: string; tokenSymbol: string; chain: string; category: string; status: string }[]; totalCount: number; originalCount: number; crawledAt: string; traceId: string } }>
     'CrawlICOList': ApiRouteHandler<{ maxProjects?: number; delay?: number }, ApiResponse<200, { success: boolean; totalUrls: number; urls: string[]; message: string }> | ApiResponse<500, { success: boolean; error: string }>, { topic: 'ico.list.crawled'; data: { urls: string[]; icoData: { detailUrl: string; projectName: string; tokenSymbol: string; chain: string; category: string; status: string }[]; totalCount: number; originalCount: number; crawledAt: string; traceId: string } }>
+    'CrawlBasicInfo': EventHandler<{ urls: string[]; icoData: { detailUrl: string; projectName: string; tokenSymbol: string; chain: string; category: string; status: string }[]; totalCount: number; originalCount: number; crawledAt: string; traceId: string }, never>
   }
 }

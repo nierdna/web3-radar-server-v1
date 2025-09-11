@@ -12,32 +12,8 @@ export const normalizeProjectData = (data: CryptoRankProject): CryptoRankProject
   }
 }
 
-export const mapToProjectCategory = (category: string): string => {
-  const categoryMap: Record<string, string> = {
-    'infrastructure': 'Infrastructure',
-    'defi': 'DeFi',
-    'nft': 'NFT',
-    'gaming': 'GameFi',
-    'dao': 'DAO',
-    'tool': 'Tool',
-    'layer1': 'Layer1',
-    'layer2': 'Layer2',
-  }
-  return categoryMap[category.toLowerCase()] || 'Others'
-}
 
-export const mapToChain = (chain: string): string => {
-  const chainMap: Record<string, string> = {
-    'ethereum': 'Ethereum',
-    'solana': 'Solana',
-    'polygon': 'Polygon',
-    'bsc': 'BSC',
-    'avalanche': 'Avalanche',
-    'arbitrum': 'Arbitrum',
-    'optimism': 'Optimism',
-  }
-  return chainMap[chain.toLowerCase()] || 'Other'
-}
+
 
 export const delay = (ms: number): Promise<void> => {
   return new Promise(resolve => setTimeout(resolve, ms))

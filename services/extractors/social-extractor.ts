@@ -11,11 +11,10 @@ export class SocialExtractor {
       gitbook: ''
     }
 
-    // Look for social links in various locations - comprehensive selectors
     const socialSelectors = [
-      // Twitter/X
+ 
       'a[href*="twitter.com"]', 'a[href*="x.com"]', 'a[href*="aiquantfun"]',
-      // Telegram
+
       'a[href*="t.me"]', 'a[href*="aiquantfun"]',
       // Discord
       'a[href*="discord"]', 'a[href*="discord.gg"]',

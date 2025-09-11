@@ -93,28 +93,13 @@ export class ICOListExtractor {
 
             // Find category from type or tags
             let category = ''
-            if (type) {
-              if (type.includes('DeFi')) category = 'DeFi'
-              else if (type.includes('NFT')) category = 'NFT'
-              else if (type.includes('Gaming')) category = 'Gaming'
-              else if (type.includes('DAO')) category = 'DAO'
-              else if (type.includes('AI')) category = 'AI'
-              else category = 'Others'
-            }
+           
 
             const project: ICOListItem = {
               detailUrl,
               projectName,
               tokenSymbol,
-              chain,
-              category,
-              status: when || 'Upcoming',
-              type,
-              initialCap,
-              raise,
-              launchpad,
-              when,
-              moniScore
+              
             }
 
             projects.push(project)

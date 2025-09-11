@@ -1,7 +1,7 @@
 export { ICOListExtractor } from './ico-list-extractor'
-export { ProjectDetailExtractor } from './project-detail-extractor'
 export { BasicInfoExtractor } from './basic-info-extractor'
 export { SocialExtractor } from './social-extractor'
 export { TokenomicsExtractor } from './tokenomics-extractor'
 export { TeamAuditExtractor } from './team-audit-extractor'
+export { TeamExtractor } from './team-extractor'
 export { FinanceExtractor } from './finance-extractor'

@@ -121,15 +121,7 @@ export const icoListItemSchema = z.object({
   detailUrl: z.string(),
   projectName: z.string(),
   tokenSymbol: z.string(),
-  chain: z.string(),
-  category: z.string(),
-  status: z.string(),
-  type: z.string(),
-  initialCap: z.string(),
-  raise: z.string(),
-  launchpad: z.string(),
-  when: z.string(),
-  moniScore: z.string(),
+ 
 })
 
 export type ICOListItem = z.infer<typeof icoListItemSchema>

@@ -1,6 +1,7 @@
 import { ApiRouteConfig, Handlers } from 'motia'
 import { z } from 'zod'
-import { CryptoRankCrawler } from '../services/crawler'
+import { CryptoRankCrawler } from '../../services/crawl/crawler'
+import { ErrorHandler } from '../../services/validations/error-handler'
 
 export const config: ApiRouteConfig = {
   type: 'api',
@@ -74,19 +75,7 @@ export const handler: Handlers['CrawlICOList'] = async (req, { emit, logger, tra
       },
     }
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    logger.error('ICO list crawl failed', { 
-      error: errorMessage, 
-      traceId 
-    })
-    
-    return {
-      status: 500,
-      body: {
-        success: false,
-        error: `Crawl failed: ${errorMessage}`,
-      },
-    }
+    return ErrorHandler.handleApiError(error, logger, traceId, 'ICO list crawl')
   } finally {
     // Always close crawler
     await crawler.close()

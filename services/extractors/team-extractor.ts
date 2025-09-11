@@ -1,4 +1,5 @@
 import { Page } from 'puppeteer'
+import { CrawlerUtils } from '../utils/crawler-utils'
 
 export interface TeamMember {
   name: string
@@ -12,15 +13,11 @@ export class TeamExtractor {
   static async extractTeamInfo(page: Page, baseUrl: string): Promise<TeamMember[]> {
     try {
       // Convert base URL to team URL
-      const teamUrl = baseUrl.replace('/price/', '/team/').replace('/ico/', '/team/')
+      const teamUrl = CrawlerUtils.getTeamUrl(baseUrl)
       console.log(`Crawling team info: ${teamUrl}`)
       
-      await page.goto(teamUrl, { 
-        waitUntil: 'domcontentloaded',
-        timeout: 30000 
-      })
-      
-      await this.randomDelay(1000, 2000)
+      await CrawlerUtils.navigateWithRetry(page, teamUrl)
+      await CrawlerUtils.randomDelay(1000, 2000)
       
       const teamData = await page.evaluate(() => {
         const extractTeamMembers = (): TeamMember[] => {
@@ -329,8 +326,4 @@ export class TeamExtractor {
     }
   }
   
-  private static async randomDelay(min: number, max: number): Promise<void> {
-    const delay = Math.floor(Math.random() * (max - min + 1)) + min
-    await new Promise(resolve => setTimeout(resolve, delay))
-  }
 }

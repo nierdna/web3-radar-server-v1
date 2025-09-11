@@ -1,5 +1,6 @@
 import { ApiRouteConfig, Handlers } from 'motia'
 import { z } from 'zod'
+import { ErrorHandler } from '../../services/validations/error-handler'
 
 export const config: ApiRouteConfig = {
   type: 'api',
@@ -82,11 +83,7 @@ export const handler: Handlers['CrawlStatus'] = async (req, { state, logger, tra
       },
     }
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    logger.error('Failed to get crawl status', { 
-      error: errorMessage, 
-      traceId 
-    })
+    ErrorHandler.handleCrawlError(error, logger, traceId, 'Crawl status fetch')
     
     // Return 200 with error info instead of 500
     return {

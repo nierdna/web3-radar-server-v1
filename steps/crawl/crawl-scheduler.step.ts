@@ -1,4 +1,5 @@
 import { CronConfig, Handlers } from 'motia'
+import { ErrorHandler } from '../../services/validations/error-handler'
 
 export const config: CronConfig = {
   type: 'cron',
@@ -45,9 +46,6 @@ export const handler: Handlers['CrawlScheduler'] = async ({ emit, logger, state 
     })
     
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    logger.error('Scheduled crawl failed', { 
-      error: errorMessage 
-    })
+    ErrorHandler.handleCrawlError(error, logger, '', 'Scheduled crawl')
   }
 }

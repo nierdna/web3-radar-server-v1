@@ -1,5 +1,6 @@
 import { Page } from 'puppeteer'
-import { ICOListItem } from '../schemas'
+import { ICOListItem } from '../../lib/schemas/schemas'
+import { CrawlerUtils } from '../utils/crawler-utils'
 
 export class ICOListExtractor {
   static async extractICOList(page: Page): Promise<ICOListItem[]> {
@@ -13,32 +14,48 @@ export class ICOListExtractor {
       
       // Navigate to current page
       if (currentPage > 1) {
-        await page.goto(`https://cryptorank.io/upcoming-ico?page=${currentPage}`, {
-          waitUntil: 'domcontentloaded',
-          timeout: 30000
-        })
-        await this.randomDelay(2000, 4000)
+        await CrawlerUtils.navigateWithRetry(page, `https://cryptorank.io/upcoming-ico?page=${currentPage}`)
+        await CrawlerUtils.randomDelay(2000, 4000)
       }
 
-      // Wait for table to load
-      await page.waitForSelector('table, [class*="table"], .upcoming-ico-list', { 
+      // Wait for table to load with more flexible selectors
+      await page.waitForSelector('a[href*="/ico/"], [data-testid="upcoming-ico-list"], .upcoming-ico-list, table, [class*="table"]', { 
         timeout: 15000 
       })
 
       const pageProjects = await page.evaluate(() => {
         const projects: ICOListItem[] = []
 
-        // Find table rows
-        const tableRows = document.querySelectorAll('tr, [class*="row"], [class*="item"]')
+        // Debug: Log what we can find
+        console.log('Available elements:', {
+          links: document.querySelectorAll('a[href*="/ico/"]').length,
+          tables: document.querySelectorAll('table').length,
+          rows: document.querySelectorAll('tr').length,
+          items: document.querySelectorAll('[class*="item"]').length
+        })
+
+        // Find table rows or any container with project links
+        const tableRows = document.querySelectorAll('tr, [class*="row"], [class*="item"], [class*="card"], [class*="project"]')
         
-        tableRows.forEach((row) => {
+        console.log(`Found ${tableRows.length} potential rows/containers`)
+        
+        tableRows.forEach((row, index) => {
           try {
             // Find project link in row
             const projectLink = row.querySelector('a[href*="/ico/"]') as HTMLAnchorElement
-            if (!projectLink) return
+            if (!projectLink) {
+              // Debug: Check what's in this row
+              if (index < 3) {
+                console.log(`Row ${index} has no ICO link:`, row.textContent?.substring(0, 100))
+              }
+              return
+            }
 
             const href = projectLink.getAttribute('href')
-            if (!href) return
+            if (!href) {
+              console.log(`Row ${index} has link but no href:`, projectLink)
+              return
+            }
 
             // Normalize URL and convert /ico/ to /price/ for better data access
             let detailUrl = href.startsWith('/') ? `https://cryptorank.io${href}` : href
@@ -99,10 +116,13 @@ export class ICOListExtractor {
               detailUrl,
               projectName,
               tokenSymbol,
-              
+              chain: chain || '',
+              category: category || '',
+              status: status || 'upcoming'
             }
 
             projects.push(project)
+            console.log(`Found project ${projects.length}:`, project)
 
           } catch (error) {
             console.error('Error extracting project from row:', error)
@@ -114,6 +134,7 @@ export class ICOListExtractor {
 
       allProjects.push(...pageProjects)
       console.log(`Page ${currentPage}: Found ${pageProjects.length} projects`)
+      console.log(`Total projects so far: ${allProjects.length}`)
 
       // Check if there's a next page
       const hasNext = await page.evaluate(() => {
@@ -126,7 +147,7 @@ export class ICOListExtractor {
 
       // Delay between pages
       if (hasNextPage) {
-        await this.randomDelay(3000, 5000)
+        await CrawlerUtils.randomDelay(3000, 5000)
       }
     }
 
@@ -143,8 +164,4 @@ export class ICOListExtractor {
     return uniqueData
   }
 
-  private static async randomDelay(min: number, max: number): Promise<void> {
-    const delay = Math.floor(Math.random() * (max - min + 1)) + min
-    await new Promise(resolve => setTimeout(resolve, delay))
-  }
 }

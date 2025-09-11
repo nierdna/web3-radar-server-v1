@@ -1,4 +1,4 @@
-import { CryptoRankProject } from './schemas'
+import { CryptoRankProject } from '../../lib/schemas/schemas'
 
 // Utility functions for data normalization and mapping
 export const normalizeProjectData = (data: CryptoRankProject): CryptoRankProject => {

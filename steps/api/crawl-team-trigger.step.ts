@@ -1,5 +1,6 @@
 import { ApiRouteConfig, Handlers } from 'motia'
 import { z } from 'zod'
+import { ErrorHandler } from '../../services/validations/error-handler'
 
 const crawlTeamTriggerSchema = z.object({
   projectUrl: z.string().url(),
@@ -51,16 +52,6 @@ export const handler: Handlers['CrawlTeamTrigger'] = async (req, { emit, logger,
     }
     
   } catch (error) {
-    logger.error('Failed to trigger team crawl', { 
-      error: error.message, 
-      traceId 
-    })
-    
-    return {
-      status: 400,
-      body: {
-        error: 'Failed to trigger team crawl'
-      }
-    }
+    return ErrorHandler.handleApiError(error, logger, traceId, 'Team crawl trigger')
   }
 }

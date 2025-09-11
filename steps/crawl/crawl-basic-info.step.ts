@@ -1,7 +1,8 @@
 import { EventConfig, Handlers } from 'motia'
 import { z } from 'zod'
-import { CryptoRankCrawler } from '../services/crawler'
-import { normalizeProjectData } from '../services/utils'
+import { CryptoRankCrawler } from '../../services/crawl/crawler'
+import { normalizeProjectData } from '../../services/utils/utils'
+import { ErrorHandler } from '../../services/validations/error-handler'
 export const config: EventConfig = {
   type: 'event',
   name: 'CrawlBasicInfo',
@@ -77,7 +78,7 @@ export const handler: Handlers['CrawlBasicInfo'] = async (input, { emit, logger,
               teamMembers = await crawler.crawlTeamInfo(url)
               logger.info('Team info crawled', { url, teamCount: teamMembers.length, traceId })
             } catch (error) {
-              const errorMessage = error instanceof Error ? error.message : String(error)
+              const errorMessage = ErrorHandler.handleCrawlError(error, logger, traceId, 'Team info crawl', { url })
               logger.warn('Failed to crawl team info', { url, error: errorMessage, traceId })
             }
             
@@ -129,12 +130,7 @@ export const handler: Handlers['CrawlBasicInfo'] = async (input, { emit, logger,
           }
         } catch (error) {
           errorCount++
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-          logger.error('Error crawling project', { 
-            url, 
-            error: errorMessage, 
-            traceId 
-          })
+          const errorMessage = ErrorHandler.handleCrawlError(error, logger, traceId, 'Project crawl', { url })
           
           await (emit as any)({
             topic: 'project.detail.failed',
@@ -175,11 +171,7 @@ export const handler: Handlers['CrawlBasicInfo'] = async (input, { emit, logger,
     logger.info('Project detail crawl completed', crawlSummary)
     
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    logger.error('Project detail crawl failed', { 
-      error: errorMessage, 
-      traceId 
-    })
+    ErrorHandler.handleCrawlError(error, logger, traceId, 'Project detail crawl')
   } finally {
     // Always close crawler
     await crawler.close()

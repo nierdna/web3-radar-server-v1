@@ -1,28 +1,16 @@
 import { Page } from 'puppeteer'
-import { CryptoRankProject } from '../schemas'
+import { CryptoRankProject } from '../../lib/schemas/schemas'
+import { CrawlerUtils } from '../utils/crawler-utils'
 
 export class BasicInfoExtractor {
   static async extractBasicInfo(page: Page, url: string): Promise<CryptoRankProject | null> {
     try {
 
-      let detailUrl = url
-      if (url.includes('/ico/')) {
-        detailUrl = url.replace('/ico/', '/price/')
-      }
+      const detailUrl = CrawlerUtils.normalizeUrl(url)
       console.log(`Crawling project detail: ${detailUrl}`)
       
-      await page.goto(detailUrl, { 
-        waitUntil: 'domcontentloaded',
-        timeout: 30000 
-      }).catch(async (error) => {
-        console.warn(`Failed to load ${detailUrl}, retrying...`, error.message)
-        await this.randomDelay(3000, 5000)
-        await page.goto(detailUrl, { 
-          waitUntil: 'networkidle0',
-          timeout: 45000 
-        })
-      })
-      await this.randomDelay(1000, 3000)
+      await CrawlerUtils.navigateWithRetry(page, detailUrl)
+      await CrawlerUtils.randomDelay(1000, 3000)
       const projectData = await page.evaluate((currentUrl) => {
         const extractBasicInfo = () => {
           const nameSelectors = [
@@ -90,12 +78,9 @@ export class BasicInfoExtractor {
             '[class*="about"]',
             '[class*="intro"]'
           ]
-          
           let description = ''
-          
           const coinDescBlock = document.querySelector('#coin-description-block')
           if (coinDescBlock) {
-        
             const textContent = coinDescBlock.textContent?.trim() || ''
             if (textContent.length > 100 && 
                 !textContent.includes('Loading') && 
@@ -378,9 +363,5 @@ export class BasicInfoExtractor {
       console.error(`Error crawling project ${url}:`, error)
       return null
     }
-  }
-  private static async randomDelay(min: number, max: number): Promise<void> {
-    const delay = Math.floor(Math.random() * (max - min + 1)) + min
-    await new Promise(resolve => setTimeout(resolve, delay))
   }
 }

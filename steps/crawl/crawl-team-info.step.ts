@@ -1,7 +1,8 @@
 import { EventConfig, Handlers } from 'motia'
 import { z } from 'zod'
-import { TeamExtractor } from '../services/extractors/team-extractor'
-import { normalizeProjectData } from '../services/utils'
+import { TeamExtractor } from '../../services/extractors/team-extractor'
+import { normalizeProjectData } from '../../services/utils/utils'
+import { ErrorHandler } from '../../services/validations/error-handler'
 
 const crawlTeamInfoSchema = z.object({
   projectUrl: z.string().url(),
@@ -70,13 +71,7 @@ export const handler: Handlers['CrawlTeamInfo'] = async (input, { emit, state, l
     })
     
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    
-    logger.error('Team info crawl failed', { 
-      projectUrl, 
-      error: errorMessage,
-      traceId 
-    })
+    const errorMessage = ErrorHandler.handleCrawlError(error, logger, traceId, 'Team info crawl', { projectUrl })
     
     await (emit as any)({
       topic: 'project.team.failed',

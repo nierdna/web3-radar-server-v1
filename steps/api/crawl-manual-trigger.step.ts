@@ -1,5 +1,6 @@
 import { EventConfig, Handlers } from 'motia'
 import { z } from 'zod'
+import { ErrorHandler } from '../../services/validations/error-handler'
 
 export const config: EventConfig = {
   type: 'event',
@@ -26,11 +27,11 @@ export const handler: Handlers['CrawlManualTrigger'] = async (input, { emit, log
       traceId 
     })
     
-    // Import crawler dynamically to avoid circular dependencies
-    const { CryptoRankCrawler } = await import('../services/crawler')
+    
+    const { CryptoRankCrawler } = await import('../../services/crawl/crawler')
     const crawler = new CryptoRankCrawler()
     
-    // Initialize and crawl
+ 
     await crawler.init()
     const urls = await crawler.crawlUpcomingICOList()
     await crawler.close()
@@ -56,10 +57,6 @@ export const handler: Handlers['CrawlManualTrigger'] = async (input, { emit, log
     })
     
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    logger.error('Manual crawl failed', { 
-      error: errorMessage, 
-      traceId 
-    })
+    ErrorHandler.handleCrawlError(error, logger, traceId, 'Manual crawl')
   }
 }

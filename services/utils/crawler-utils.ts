@@ -87,6 +87,14 @@ export class CrawlerUtils {
    * Convert price URL to team URL
    */
   static getTeamUrl(url: string): string {
-    return url.replace('/price/', '/team/').replace('/ico/', '/team/')
+    // Handle different URL patterns
+    if (url.includes('/price/')) {
+      return url.replace('/price/', '/price/') + '/team'
+    } else if (url.includes('/ico/')) {
+      return url.replace('/ico/', '/price/') + '/team'
+    } else {
+      // Fallback: add /team to the end
+      return url + '/team'
+    }
   }
 }

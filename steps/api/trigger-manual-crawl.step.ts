@@ -5,19 +5,18 @@ import { ErrorHandler } from '../../services/validations/error-handler'
 
 export const config: ApiRouteConfig = {
   type: 'api',
-  name: 'CrawlICOList',
-  description: 'Crawl upcoming ICO list from CryptoRank',
+  name: 'TriggerManualCrawl',
+  description: 'Manually trigger ICO crawl with custom parameters',
   method: 'POST',
-  path: '/crawl/ico-list',
+  path: '/crawl/manual',
   bodySchema: z.object({
-    maxProjects: z.number().optional().default(0), 
+    maxProjects: z.number().optional().default(10),
     delay: z.number().optional().default(2000),
   }),
   responseSchema: {
     200: z.object({
       success: z.boolean(),
       totalUrls: z.number(),
-      urls: z.array(z.string()),
       message: z.string(),
     }),
     500: z.object({
@@ -29,24 +28,27 @@ export const config: ApiRouteConfig = {
   flows: ['crypto-crawler'],
 }
 
-export const handler: Handlers['CrawlICOList'] = async (req, { emit, logger, traceId }) => {
-  const { maxProjects = 50, delay = 2000 } = req.body
-  const crawler = new CryptoRankCrawler()
-
+export const handler: Handlers['TriggerManualCrawl'] = async (req, { emit, logger, traceId }) => {
+  const { maxProjects = 10, delay = 2000 } = req.body
+  
   try {
-    logger.info('Starting ICO list crawl', { maxProjects, delay, traceId })
+    logger.info('Manual crawl triggered', { 
+      maxProjects, 
+      delay, 
+      traceId 
+    })
     
-    // Initialize crawler
+    const crawler = new CryptoRankCrawler()
     await crawler.init()
     
-    // Crawl the list
     const icoData = await crawler.crawlUpcomingICOList(maxProjects)
+    await crawler.close()
     
-    // Limit results if needed (if maxProjects is 0, use all data)
-    const limitedData = maxProjects > 0 ? icoData.slice(0, maxProjects) : icoData
+    // Limit results
+    const limitedData = icoData.slice(0, maxProjects)
     const urls = limitedData.map(item => item.detailUrl)
     
-    // Emit event with crawled data
+    // Emit event to trigger distribution
     await emit({
       topic: 'ico.list.crawled',
       data: {
@@ -58,26 +60,22 @@ export const handler: Handlers['CrawlICOList'] = async (req, { emit, logger, tra
         traceId,
       },
     })
-
-    logger.info('ICO list crawl completed', { 
+    
+    logger.info('Manual crawl completed', { 
       totalUrls: limitedData.length, 
       traceId 
     })
-
+    
     return {
       status: 200,
       body: {
         success: true,
         totalUrls: limitedData.length,
-        urls: urls,
-        icoData: limitedData,
-        message: `Successfully crawled ${limitedData.length} ICO items with data`,
+        message: `Successfully triggered manual crawl for ${limitedData.length} ICO items`,
       },
     }
+    
   } catch (error) {
-    return ErrorHandler.handleApiError(error, logger, traceId, 'ICO list crawl')
-  } finally {
-    // Always close crawler
-    await crawler.close()
+    return ErrorHandler.handleApiError(error, logger, traceId, 'Manual crawl')
   }
 }

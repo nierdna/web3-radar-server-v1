@@ -6,16 +6,25 @@
     "dev": "motia dev",
     "generate-types": "motia generate-types",
     "build": "motia build",
-    "clean": "rm -rf dist node_modules python_modules .motia .mermaid"
+    "clean": "rm -rf dist node_modules python_modules .motia .mermaid",
+    "db:setup": "node scripts/setup-database.js",
+    "db:generate": "npx prisma generate",
+    "db:push": "npx prisma db push",
+    "db:studio": "npx prisma studio",
+    "db:clean": "node scripts/clean-database.js",
+    "db:reset": "pnpm db:clean && pnpm db:push"
   },
   "keywords": [
     "motia"
   ],
   "dependencies": {
+    "@prisma/client": "^6.16.1",
     "@types/jsdom": "^21.1.7",
     "@types/puppeteer": "^5.4.7",
+    "axios": "^1.7.9",
     "jsdom": "^26.1.0",
     "motia": "^0.6.4-beta.130",
+    "prisma": "^6.16.1",
     "puppeteer": "^24.19.0",
     "zod": "^3.24.4"
   },

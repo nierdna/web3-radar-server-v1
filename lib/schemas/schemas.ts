@@ -10,6 +10,7 @@ export const cryptoRankProjectSchema = z.object({
   status: z.string().optional(),
   description: z.string().optional(),
   website: z.string().optional(),
+  tokenContract: z.string().optional(),
   socials: z.object({
     twitter: z.string().optional(),
     discord: z.string().optional(),
@@ -25,6 +26,7 @@ export const cryptoRankProjectSchema = z.object({
     discordMembers: z.number().optional(),
     telegramMembers: z.number().optional(),
     githubStars: z.number().optional(),
+    mediumFollowers: z.number().optional(),
   }).optional(),
   tokenomics: z.object({
     tokenName: z.string().optional(),

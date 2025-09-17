@@ -223,6 +223,7 @@ model CommunityMetrics {
   discordMembers   Int?
   telegramMembers  Int?
   githubStars      Int?
+  mediumFollowers  Int?
   projectId        String      @unique
   project          Web3Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 

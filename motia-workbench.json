@@ -15,25 +15,41 @@
   {
     "id": "crypto-crawler",
     "config": {
-      "steps\\crawl-status.step.ts": {
-        "x": -128,
-        "y": -176
+      "steps\\cron\\scheduled-crawl.step.ts": {
+        "x": -241,
+        "y": -91
       },
-      "steps\\crawl-scheduler.step.ts": {
-        "x": 1609,
-        "y": -131
+      "steps\\crawl\\save-community-metrics.step.ts": {
+        "x": 1548,
+        "y": 126
       },
-      "steps\\crawl-manual-trigger.step.ts": {
-        "x": 1081,
-        "y": 47
+      "steps\\crawl\\process-single-project.step.ts": {
+        "x": 687,
+        "y": 138
       },
-      "steps\\crawl-ico-list.step.ts": {
-        "x": 521,
-        "y": -247
+      "steps\\crawl\\distribute-project-crawl.step.ts": {
+        "x": 350,
+        "y": 243
       },
-      "steps\\crawl-basic-info.step.ts": {
-        "x": 554,
-        "y": 360
+      "steps\\crawl\\crawl-community-metrics.step.ts": {
+        "x": 1121,
+        "y": 38
+      },
+      "steps\\crawl\\aggregate-crawl-results.step.ts": {
+        "x": 1140,
+        "y": 317
+      },
+      "steps\\api\\trigger-manual-crawl.step.ts": {
+        "x": -312,
+        "y": 196
+      },
+      "steps\\api\\trigger-ico-crawl.step.ts": {
+        "x": -409,
+        "y": 419
+      },
+      "steps\\api\\get-crawl-status.step.ts": {
+        "x": -389,
+        "y": 761
       }
     }
   }

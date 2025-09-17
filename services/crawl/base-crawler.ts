@@ -44,6 +44,11 @@ export abstract class BaseCrawler {
     await AntiBotMeasures.setupResourceBlocking(this.page)
   }
 
+  getPage(): Page {
+    if (!this.page) throw new Error('Crawler not initialized')
+    return this.page
+  }
+
   protected async navigateToPage(url: string, page?: Page): Promise<void> {
     const targetPage = page || this.page
     if (!targetPage) throw new Error('No page available for navigation')

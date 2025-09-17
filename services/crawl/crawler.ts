@@ -37,8 +37,7 @@ export class CryptoRankCrawler extends BaseCrawler {
       
       await CrawlerUtils.randomDelay(1000, 2000)
 
-      // Use the extracted ICO list extractor
-      return await ICOListExtractor.extractICOList(this.page)
+      return await ICOListExtractor.extractKeys()
       
     } catch (error) {
       console.error('Error crawling ICO list:', error)
@@ -46,15 +45,15 @@ export class CryptoRankCrawler extends BaseCrawler {
     }
   }
 
-  async crawlProjectDetail(url: string): Promise<CryptoRankProject | null> {
+  async crawlProjectDetail(url: string, projectName?: string, tokenSymbol?: string): Promise<CryptoRankProject | null> {
     if (!this.browser) throw new Error('Crawler not initialized')
 
     // Create a new page for each project to avoid state issues
     const page = await this.setupNewPage()
     
     try {
-      // Use the extracted project detail extractor
-      return await BasicInfoExtractor.extractBasicInfo(page, url)
+      // Use the extracted project detail extractor with name/symbol from ICO list
+      return await BasicInfoExtractor.extractBasicInfo(page, url, projectName, tokenSymbol)
     } catch (error) {
       console.error(`Error crawling project ${url}:`, error)
       return null

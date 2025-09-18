@@ -68,7 +68,7 @@ export class TelegramService {
         chat_id: this.groupId,
         text: message.text,
         parse_mode: message.parse_mode || 'HTML',
-        disable_web_page_preview: message.disable_web_page_preview || false
+        disable_web_page_preview: message.disable_web_page_preview || true
       })
 
       console.log('Telegram message sent successfully:', response.data.ok)
@@ -95,7 +95,7 @@ export class TelegramService {
     return {
       text: message,
       parse_mode: 'HTML',
-      disable_web_page_preview: false
+        disable_web_page_preview: true
     }
   }
 
@@ -115,7 +115,7 @@ export class TelegramService {
     return {
       text: message,
       parse_mode: 'HTML',
-      disable_web_page_preview: false
+        disable_web_page_preview: true
     }
   }
 

@@ -3,10 +3,10 @@ import { z } from 'zod'
 
 export const config: ApiRouteConfig = {
   type: 'api',
-  name: 'ExtractProjectsSteps',
-  description: 'Trigger micro-steps extraction workflow for all upcoming ICO projects',
+  name: 'ExtractICOUpcomingProjectsSteps',
+  description: 'Trigger micro-steps extraction workflow for all upcoming ICO projects from CryptoRank',
   method: 'GET',
-  path: '/api/extract-projects',
+  path: '/api/extract-ico-upcoming-projects',
   responseSchema: {
     200: z.object({
       success: z.boolean(),

@@ -290,6 +290,9 @@ enum LaunchStatus {
   Testnet
   Mainnet
   Dead
+  Active
+  Upcoming
+  Ended
 }
 
 enum TokenType {

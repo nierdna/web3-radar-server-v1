@@ -7,7 +7,7 @@ export const config: EventConfig = {
   name: 'ExtractBasicInfo',
   description: 'Extract basic information for a single coin',
   subscribes: ['coins.keys.extracted'],
-  emits: ['coins.basic.extracted', 'coins.basic.failed'],
+  emits: ['coins.basic.extracted'],
   input: z.object({
     coinKey: z.string()
   }),
@@ -25,8 +25,8 @@ export const handler: Handlers['ExtractBasicInfo'] = async (input, { emit, logge
     if (!basicInfo) {
       logger.warn(`No basic info data for ${coinKey}`, { coinKey, traceId })
       await emit({
-        topic: 'coins.basic.failed',
-        data: { coinKey, error: 'No basic info data' }
+        topic: 'coins.basic.extracted',
+        data: { coinKey, basicInfo: {} }
       })
       return
     }
@@ -51,8 +51,8 @@ export const handler: Handlers['ExtractBasicInfo'] = async (input, { emit, logge
     })
     
     await emit({
-      topic: 'coins.basic.failed',
-      data: { coinKey, error: error.message }
+      topic: 'coins.basic.extracted',
+      data: { coinKey, basicInfo: {} }
     })
   }
 }

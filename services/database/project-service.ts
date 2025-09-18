@@ -147,17 +147,6 @@ export class ProjectService {
         }
       }
       
-      // Second try: just by name (fallback)
-      if (!existingProject) {
-        existingProject = await prisma.web3Project.findFirst({
-          where: {
-            name: data.name
-          }
-        })
-        if (existingProject) {
-          matchType = 'name only'
-        }
-      }
       
       let project
       if (existingProject) {
@@ -383,12 +372,14 @@ export class ProjectService {
   
   private static mapLaunchStatus(status: string): LaunchStatus {
     const statusMap: Record<string, LaunchStatus> = {
-      'upcoming': LaunchStatus.NotLaunched,
-      'active': LaunchStatus.Mainnet,
-      'ended': LaunchStatus.Mainnet,
-      'past': LaunchStatus.Mainnet,
+      'upcoming': LaunchStatus.Upcoming,
+      'active': LaunchStatus.Active,
+      'ended': LaunchStatus.Ended,
+      'past': LaunchStatus.Ended,
       'testnet': LaunchStatus.Testnet,
       'dead': LaunchStatus.Dead,
+      'mainnet': LaunchStatus.Mainnet,
+      'notlaunched': LaunchStatus.NotLaunched,
     }
     return statusMap[status.toLowerCase()] || LaunchStatus.NotLaunched
   }

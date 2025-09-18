@@ -9,16 +9,31 @@ export const config: EventConfig = {
   subscribes: ['extraction.start'],
   emits: ['coins.keys.extracted'],
   input: z.object({
-    trigger: z.string().optional()
+    trigger: z.string().optional(),
+    projectType: z.string().optional()
   }),
   flows: ['data-extraction']
 }
 
 export const handler: Handlers['ExtractCoinKeys'] = async (input, { emit, logger, traceId }) => {
   try {
-    logger.info('Starting coin keys extraction', { traceId })
+    const { projectType = 'upcoming' } = input as { trigger?: string; projectType?: string }
+    logger.info('Starting coin keys extraction', { projectType, traceId })
     
-    const coinKeys = await ICOListExtractor.extractKeys()
+    let coinKeys: string[] = []
+    
+    switch (projectType) {
+      case 'active-ico':
+        coinKeys = await ICOListExtractor.extractICOActiveKeys()
+        break
+      case 'all-ico':
+        coinKeys = await ICOListExtractor.extractICOKeys()
+        break
+      case 'upcoming':
+      default:
+        coinKeys = await ICOListExtractor.extractICOUpcomingKeys()
+        break
+    }
     
     if (!coinKeys || coinKeys.length === 0) {
       logger.warn('No coin keys found from CryptoRank', { traceId })

@@ -1,116 +1,21 @@
-import { prisma } from '../../lib/prisma'
+import { prisma } from '../../lib/config/prisma'
 import { 
   ProjectCategory, 
   Chain, 
   LaunchStatus, 
   TokenType, 
 } from '@prisma/client'
+import { ProjectData } from '../../lib/types'
 
-export interface ProjectData {
-  // Basic Info
-  name: string
-  symbol?: string
-  description: string
-  website?: string
-  category: string
-  chain: string
-  status: string
-  tokenContract?: string
-  
-  // Socials
-  socials?: {
-    twitter?: string
-    discord?: string
-    telegram?: string
-    medium?: string
-    github?: string
-  }
-  
-  // Fundraising
-  fundraising?: {
-    totalRaised?: number
-    notableInvestors?: string[]
-    fundingRounds?: Array<{
-      roundName: string
-      date: Date
-      amount: number
-      investors: string[]
-      tokenPrice?: number
-      platform?: string
-      lockup?: string
-      status?: string
-      tokensForSale?: number
-    }>
-  }
-  
-  // Tokenomics
-  tokenomics?: {
-    tokenName: string
-    tokenSymbol: string
-    tokenType: string
-    totalSupply: number
-    circulatingSupply?: number
-    tokenContract?: string
-    allocations?: Array<{
-      name: string
-      percent: number
-      vestingSchedule?: string
-      cliff?: string
-    }>
-  }
-  
-  // TGE Info
-  tgeInfo?: {
-    tgeDate?: Date
-    tgeExchange?: string
-    initialMarketcap?: number
-  }
-  
-  // Community Metrics
-  communityMetrics?: {
-    twitterFollowers?: number
-    discordMembers?: number
-    telegramMembers?: number
-    githubStars?: number
-    mediumFollowers?: number
-  }
-  
-  // Team
-  team?: Array<{
-    name: string
-    role: string
-    linkedin?: string
-    anonymous?: boolean
-  }>
-  
-  // Finance extractor returns these at root level
-  fundingRounds?: Array<{
-    roundName: string
-    date: Date
-    amount: number
-    investors: string[]
-    tokenPrice?: number
-    platform?: string
-    lockup?: string
-    status?: string
-    tokensForSale?: number
-  }>
-  
-  allocations?: Array<{
-    name: string
-    percent: number
-    vestingSchedule?: string
-    cliff?: string
-  }>
-}
+
 
 export class ProjectService {
   
   static async createOrUpdateProject(coinKey: string, data: ProjectData, userId: string) {
     try {
-      const category = this.mapCategory(data.category)
-      const chain = this.mapChain(data.chain)
-      const launchStatus = this.mapLaunchStatus(data.status)
+      const category = this.mapCategory(data.category || '')
+      const chain = this.mapChain(data.chain || '')
+      const launchStatus = this.mapLaunchStatus(data.status || '')
       const tokenType = this.mapTokenType(data.tokenomics?.tokenType || 'Utility')
       
       
@@ -130,11 +35,9 @@ export class ProjectService {
       
       const actualUserId = systemUser.id
       
-      // Check for existing project by name + symbol (as per SRS)
       let existingProject = null
       let matchType = ''
       
-      // First try: name + symbol
       if (data.symbol) {
         existingProject = await prisma.web3Project.findFirst({
           where: {
@@ -149,14 +52,18 @@ export class ProjectService {
       
       
       let project
+      let isNewProject = false
+      let oldStatus = null
+      
       if (existingProject) {
         console.log(` Updating existing project: ${data.name} (matched by: ${matchType})`)
+        oldStatus = existingProject.launchStatus
         project = await prisma.web3Project.update({
           where: { id: existingProject.id },
           data: {
             name: data.name,
             symbol: data.symbol,
-            description: data.description,
+            description: data.description || '',
             website: data.website,
             category,
             chain,
@@ -166,12 +73,12 @@ export class ProjectService {
         })
       } else {
         console.log(`Creating new project: ${data.name} (${data.symbol || 'no symbol'})`)
+        isNewProject = true
         project = await prisma.web3Project.create({
           data: {
-            id: `${coinKey}-${data.symbol || data.name}`.toLowerCase().replace(/[^a-z0-9-]/g, '-'),
             name: data.name,
             symbol: data.symbol,
-            description: data.description,
+            description: data.description || '',
             website: data.website,
             category,
             chain,
@@ -192,7 +99,6 @@ export class ProjectService {
         })
       }
       
-      // Create/update fundraising
       if (data.fundraising) {
         const fundraising = await prisma.fundraising.upsert({
           where: { projectId: project.id },
@@ -207,17 +113,14 @@ export class ProjectService {
           },
         })
         
-        // Create/update funding rounds
         if (data.fundingRounds && data.fundingRounds.length > 0) {
-          // Delete existing rounds
           await prisma.fundingRound.deleteMany({
             where: { fundraisingId: fundraising.id },
           })
           
-          // Create new rounds
           await prisma.fundingRound.createMany({
             data: data.fundingRounds
-              .filter((round: any) => round.date !== null) // Filter out rounds with null dates
+              .filter((round: any) => round.date !== null) 
               .map((round: any) => ({
                 roundName: round.roundName,
                 date: round.date,
@@ -229,8 +132,6 @@ export class ProjectService {
           })
         }
       }
-      
-      // Create/update tokenomics
       if (data.tokenomics) {
         const tokenomic = await prisma.tokenomic.upsert({
           where: { projectId: project.id },
@@ -243,24 +144,21 @@ export class ProjectService {
             tokenContract: data.tokenomics.tokenContract || data.tokenContract, // Use basicInfo tokenContract as fallback
           },
           create: {
-            tokenName: data.tokenomics.tokenName,
-            tokenSymbol: data.tokenomics.tokenSymbol,
+            tokenName: data.tokenomics?.tokenName || data.name,
+            tokenSymbol: data.tokenomics?.tokenSymbol || data.symbol || '',
             tokenType,
-            totalSupply: data.tokenomics.totalSupply,
-            circulatingSupply: data.tokenomics.circulatingSupply,
+            totalSupply: data.tokenomics?.totalSupply || 0,
+            circulatingSupply: data.tokenomics?.circulatingSupply,
             tokenContract: data.tokenomics.tokenContract || data.tokenContract, // Use basicInfo tokenContract as fallback
             projectId: project.id,
           },
         })
         
-        // Create/update token allocations
         if (data.allocations && data.allocations.length > 0) {
-          // Delete existing allocations
           await prisma.tokenAllocation.deleteMany({
             where: { tokenomicId: tokenomic.id },
           })
           
-          // Create new allocations
           await prisma.tokenAllocation.createMany({
             data: data.allocations.map((allocation: any) => ({
               name: allocation.name,
@@ -273,7 +171,6 @@ export class ProjectService {
         }
       }
       
-      // Create/update TGE info
       if (data.tgeInfo) {
         await prisma.tgeInfo.upsert({
           where: { projectId: project.id },
@@ -285,7 +182,6 @@ export class ProjectService {
         })
       }
       
-      // Create/update community metrics
       if (data.communityMetrics) {
         await prisma.communityMetrics.upsert({
           where: { projectId: project.id },
@@ -297,14 +193,11 @@ export class ProjectService {
         })
       }
       
-      // Create/update team members
       if (data.team && data.team.length > 0) {
-        // Delete existing team members
         await prisma.teamMember.deleteMany({
           where: { projectId: project.id },
         })
         
-        // Create new team members
         await prisma.teamMember.createMany({
           data: data.team.map(member => ({
             name: member.name,
@@ -316,7 +209,13 @@ export class ProjectService {
         })
       }
       
-      return project
+      return {
+        project,
+        isNewProject,
+        oldStatus,
+        newStatus: launchStatus,
+        statusChanged: oldStatus && oldStatus !== launchStatus
+      }
     } catch (error) {
       console.error('Error creating/updating project:', error)
       throw error

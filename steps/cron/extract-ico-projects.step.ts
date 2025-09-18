@@ -18,8 +18,7 @@ export const handler: Handlers['ExtractAllProjectsCron'] = async ({ emit, logger
       topic: 'extraction.start',
       data: { 
         trigger: 'scheduled',
-        projectType: 'all-ico',
-        scheduledAt: new Date().toISOString()
+        projectType: 'all-ico'
       }
     })
     

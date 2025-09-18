@@ -12,18 +12,15 @@ declare module 'motia' {
   }
 
   interface Handlers {
-    'SaveProject': EventHandler<{ coinKey: string; combinedData?: unknown }, never>
-    'ExtractTeamData': EventHandler<{ coinKey: string; basicInfo: Record<string, unknown> }, { topic: 'coins.team.extracted'; data: { coinKey: string; combinedData: Record<string, unknown> } }>
-    'ExtractFinanceData': EventHandler<{ coinKey: string; combinedData: Record<string, unknown> }, { topic: 'coins.finance.extracted'; data: { coinKey: string; combinedData?: unknown } }>
-    'ExtractCoinKeys': EventHandler<{ trigger?: string; projectType?: string }, { topic: 'coins.keys.extracted'; data: { coinKey: string } }>
-    'ExtractBasicInfo': EventHandler<{ coinKey: string }, { topic: 'coins.basic.extracted'; data: { coinKey: string; basicInfo: Record<string, unknown> } }>
+    'TelegramNotification': EventHandler<{ projectName: string; symbol?: string; status: string; category?: string; website?: string; projectId: string; changeType: 'created' | 'status_changed'; oldStatus?: string; newStatus?: string }, never>
+    'ExtractProjects': EventHandler<{ trigger?: string; projectType?: string }, { topic: 'project.created'; data: { projectName: string; symbol?: string; status: string; category?: string; website?: string; projectId: string; changeType: 'created' | 'status_changed'; oldStatus?: string; newStatus?: string } } | { topic: 'project.status.changed'; data: { projectName: string; symbol?: string; status: string; category?: string; website?: string; projectId: string; changeType: 'created' | 'status_changed'; oldStatus?: string; newStatus?: string } }>
+    'ExtractUpcomingProjectsCron': CronHandler<{ topic: 'extraction.start'; data: { trigger?: string; projectType?: string } }>
+    'ExtractProjectsRotationCron': CronHandler<{ topic: 'extraction.start'; data: { trigger?: string; projectType?: string } }>
+    'ExtractAllProjectsCron': CronHandler<{ topic: 'extraction.start'; data: { trigger?: string; projectType?: string } }>
+    'ExtractActiveProjectsCron': CronHandler<{ topic: 'extraction.start'; data: { trigger?: string; projectType?: string } }>
     'GetProjects': ApiRouteHandler<Record<string, unknown>, ApiResponse<200, { success: boolean; projects: { id: string; name: string; symbol?: string; description: string; website?: string; category: string; chain: string; launchStatus: string; createdAt: string; updatedAt: string; socials?: { twitter?: string; discord?: string; telegram?: string; medium?: string; github?: string }; fundraising?: { totalRaised?: number; notableInvestors: string[]; fundingRounds: { roundName: string; date: string; amount: number; investors: string[]; tokenPrice?: number }[] }; tokenomic?: { tokenName: string; tokenSymbol: string; tokenType: string; totalSupply: number; circulatingSupply?: number; tokenContract?: string; allocations: { name: string; percent: number; vestingSchedule?: string; cliff?: string }[] }; tgeInfo?: { tgeDate?: string; tgeExchange?: string; initialMarketcap?: number }; communityMetrics?: { twitterFollowers?: number; discordMembers?: number; telegramMembers?: number; githubStars?: number; mediumFollowers?: number }; team: { name: string; role: string; linkedin?: string; anonymous: boolean }[] }[] }> | ApiResponse<500, { success: boolean; error: string }>, never>
     'ExtractICOUpcomingProjectsSteps': ApiRouteHandler<Record<string, unknown>, ApiResponse<200, { success: boolean; message: string; workflow: string }> | ApiResponse<500, { success: boolean; error: string }>, { topic: 'extraction.start'; data: { trigger?: string; projectType?: string } }>
     'ExtractICOProjectsSteps': ApiRouteHandler<Record<string, unknown>, ApiResponse<200, { success: boolean; message: string; workflow: string }> | ApiResponse<500, { success: boolean; error: string }>, { topic: 'extraction.start'; data: { trigger?: string; projectType?: string } }>
     'ExtractICOActiveProjectsSteps': ApiRouteHandler<Record<string, unknown>, ApiResponse<200, { success: boolean; message: string; workflow: string }> | ApiResponse<500, { success: boolean; error: string }>, { topic: 'extraction.start'; data: { trigger?: string; projectType?: string } }>
-    'ExtractUpcomingProjectsCron': CronHandler<{ topic: 'extraction.start'; data: { trigger?: string; projectType?: string } }>
-    'ExtractActiveProjectsCron': CronHandler<{ topic: 'extraction.start'; data: { trigger?: string; projectType?: string } }>
-    'ExtractProjectsRotationCron': CronHandler<{ topic: 'extraction.start'; data: { trigger?: string; projectType?: string } }>
-    'ExtractAllProjectsCron': CronHandler<{ topic: 'extraction.start'; data: { trigger?: string; projectType?: string } }>
   }
 }

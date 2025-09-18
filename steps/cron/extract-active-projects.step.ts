@@ -13,7 +13,7 @@ export const handler: Handlers['ExtractActiveProjectsCron'] = async ({ emit, log
   try {
     logger.info('Starting scheduled extraction for active ICO projects', { traceId })
     
-    // Trigger the micro-steps workflow for active projects
+    
     await emit({
       topic: 'extraction.start',
       data: { 

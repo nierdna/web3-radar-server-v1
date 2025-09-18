@@ -41,7 +41,7 @@ export const handler = async (req: any, { emit, logger, traceId }: any) => {
       body: {
         success: true,
         message: 'Micro-steps extraction workflow started successfully',
-        workflow: 'extraction.start -> extract-coin-keys -> extract-basic-info -> extract-team-data -> extract-finance-data -> save-project'
+        workflow: 'extraction.start -> extract-projects -> extraction.completed'
       }
     }
     
